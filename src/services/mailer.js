@@ -24,7 +24,7 @@ async function enviarEmail({ assunto, html }) {
   }
   const transporte = getTransport();
   await transporte.sendMail({
-    from: `"Gestor de Empréstimos" <${process.env.GMAIL_USER}>`,
+    from: `"Hub Money" <${process.env.GMAIL_USER}>`,
     to: destinatarios.join(','),
     subject: assunto,
     html,
