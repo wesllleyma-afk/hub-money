@@ -1,12 +1,12 @@
 const express = require('express');
 const auth = require('../services/auth');
-const sheets = require('../services/sheets');
+const db = require('../services/db');
 
 const router = express.Router();
 
 router.get('/usuarios', auth.requireAdmin, async (req, res, next) => {
   try {
-    const usuarios = await sheets.readSheet('Usuarios');
+    const { rows: usuarios } = await db.query('SELECT * FROM usuarios ORDER BY nome ASC');
     res.render('usuarios/list', { usuarios });
   } catch (err) {
     next(err);

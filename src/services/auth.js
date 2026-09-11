@@ -1,34 +1,28 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const sheets = require('./sheets');
+const db = require('./db');
 
 const COOKIE_NAME = 'sessao';
 
 async function hasAnyUser() {
-  const users = await sheets.readSheet('Usuarios');
-  return users.length > 0;
+  const { rows } = await db.query('SELECT 1 FROM usuarios LIMIT 1');
+  return rows.length > 0;
 }
 
 async function findUserByEmail(email) {
-  const users = await sheets.readSheet('Usuarios');
-  return users.find((u) => u.email.toLowerCase() === String(email).toLowerCase()) || null;
+  const { rows } = await db.query('SELECT * FROM usuarios WHERE lower(email) = lower($1)', [email]);
+  return rows[0] || null;
 }
 
 async function createUser({ nome, email, senha, papel }) {
   const existing = await findUserByEmail(email);
   if (existing) throw new Error('Ja existe um usuario com esse e-mail.');
   const senha_hash = await bcrypt.hash(senha, 10);
-  const user = {
-    id: uuidv4(),
-    nome,
-    email,
-    senha_hash,
-    papel,
-    criado_em: new Date().toISOString(),
-  };
-  await sheets.appendRow('Usuarios', user);
-  return user;
+  const { rows } = await db.query(
+    'INSERT INTO usuarios (nome, email, senha_hash, papel) VALUES ($1, $2, $3, $4) RETURNING *',
+    [nome, email, senha_hash, papel]
+  );
+  return rows[0];
 }
 
 async function verifyLogin(email, senha) {

@@ -1,5 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
-const sheets = require('./sheets');
+const db = require('./db');
 
 function toNumber(v) {
   return Number(v) || 0;
@@ -47,68 +46,90 @@ function computeLoanState(loan, refDateISO = todayISO()) {
 }
 
 async function listEmprestimos({ usuarioId, isAdmin, clienteId, status } = {}) {
-  let rows = await sheets.readSheet('Emprestimos');
-  if (!isAdmin) rows = rows.filter((r) => r.usuario_id === usuarioId);
-  if (clienteId) rows = rows.filter((r) => r.cliente_id === clienteId);
+  const conditions = [];
+  const params = [];
+  if (!isAdmin) {
+    params.push(usuarioId);
+    conditions.push(`usuario_id = $${params.length}`);
+  }
+  if (clienteId) {
+    params.push(clienteId);
+    conditions.push(`cliente_id = $${params.length}`);
+  }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const { rows } = await db.query(`SELECT * FROM emprestimos ${where}`, params);
+
   let withState = rows.map((r) => computeLoanState(r));
   if (status) withState = withState.filter((r) => r.statusExibicao === status);
   return withState.sort((a, b) => (a.data_vencimento_atual < b.data_vencimento_atual ? -1 : 1));
 }
 
 async function getEmprestimo(id) {
-  const loan = await sheets.findById('Emprestimos', id);
+  const { rows } = await db.query('SELECT * FROM emprestimos WHERE id = $1', [id]);
+  const loan = rows[0];
   if (!loan) return null;
-  const pagamentos = (await sheets.readSheet('Pagamentos'))
-    .filter((p) => p.emprestimo_id === id)
-    .sort((a, b) => (a.criado_em < b.criado_em ? 1 : -1));
-  return { ...computeLoanState(loan), pagamentos };
+  const pagamentosRes = await db.query(
+    'SELECT * FROM pagamentos WHERE emprestimo_id = $1 ORDER BY criado_em DESC',
+    [id]
+  );
+  return { ...computeLoanState(loan), pagamentos: pagamentosRes.rows };
 }
 
 async function criarEmprestimo({ usuarioId, clienteId, valorPrincipal, valorJurosCiclo, prazoDias, multaPorDia }) {
   const hoje = todayISO();
-  const loan = {
-    id: uuidv4(),
-    usuario_id: usuarioId,
-    cliente_id: clienteId,
-    valor_principal: toNumber(valorPrincipal),
-    valor_juros_ciclo: toNumber(valorJurosCiclo),
-    prazo_dias: toNumber(prazoDias),
-    data_inicio: hoje,
-    data_vencimento_atual: addDaysISO(hoje, prazoDias),
-    multa_por_dia: toNumber(multaPorDia),
-    status: 'ativo',
-    emprestimo_origem_id: '',
-    criado_em: new Date().toISOString(),
-  };
-  await sheets.appendRow('Emprestimos', loan);
-  return loan;
+  const { rows } = await db.query(
+    `INSERT INTO emprestimos
+       (usuario_id, cliente_id, valor_principal, valor_juros_ciclo, prazo_dias,
+        data_inicio, data_vencimento_atual, multa_por_dia, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ativo')
+     RETURNING *`,
+    [usuarioId, clienteId, toNumber(valorPrincipal), toNumber(valorJurosCiclo), toNumber(prazoDias),
+      hoje, addDaysISO(hoje, prazoDias), toNumber(multaPorDia)]
+  );
+  return rows[0];
 }
 
-async function registrarPagamento({ emprestimoId, valor, tipo, observacao }) {
-  const pagamento = {
-    id: uuidv4(),
-    emprestimo_id: emprestimoId,
-    data: todayISO(),
-    valor: toNumber(valor),
-    tipo,
-    observacao: observacao || '',
-    criado_em: new Date().toISOString(),
-  };
-  await sheets.appendRow('Pagamentos', pagamento);
-  return pagamento;
+async function registrarPagamento({ emprestimoId, valor, tipo, observacao, valorJuros, valorMulta, valorPrincipal }) {
+  const { rows } = await db.query(
+    `INSERT INTO pagamentos (emprestimo_id, data, valor, tipo, observacao, valor_juros, valor_multa, valor_principal)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    [emprestimoId, todayISO(), toNumber(valor), tipo, observacao || '',
+      toNumber(valorJuros), toNumber(valorMulta), toNumber(valorPrincipal)]
+  );
+  return rows[0];
 }
 
 async function renovar(emprestimoId, valorPago) {
-  const loan = await sheets.findById('Emprestimos', emprestimoId);
+  const { rows } = await db.query('SELECT * FROM emprestimos WHERE id = $1', [emprestimoId]);
+  const loan = rows[0];
   if (!loan) throw new Error('Emprestimo nao encontrado.');
-  await registrarPagamento({ emprestimoId, valor: valorPago, tipo: 'renovacao' });
+  const estado = computeLoanState(loan);
+  await registrarPagamento({
+    emprestimoId, valor: valorPago, tipo: 'renovacao',
+    valorJuros: estado.valor_juros_ciclo, valorMulta: estado.multaAcumulada,
+  });
   const novaData = addDaysISO(loan.data_vencimento_atual, loan.prazo_dias);
-  return sheets.updateRow('Emprestimos', emprestimoId, { data_vencimento_atual: novaData });
+  const updated = await db.query(
+    'UPDATE emprestimos SET data_vencimento_atual = $2 WHERE id = $1 RETURNING *',
+    [emprestimoId, novaData]
+  );
+  return updated.rows[0];
 }
 
 async function quitar(emprestimoId, valorPago) {
-  await registrarPagamento({ emprestimoId, valor: valorPago, tipo: 'quitacao' });
-  return sheets.updateRow('Emprestimos', emprestimoId, { status: 'quitado' });
+  const { rows } = await db.query('SELECT * FROM emprestimos WHERE id = $1', [emprestimoId]);
+  const loan = rows[0];
+  if (!loan) throw new Error('Emprestimo nao encontrado.');
+  const estado = computeLoanState(loan);
+  await registrarPagamento({
+    emprestimoId, valor: valorPago, tipo: 'quitacao',
+    valorJuros: estado.valor_juros_ciclo, valorMulta: estado.multaAcumulada, valorPrincipal: estado.valor_principal,
+  });
+  const updated = await db.query(
+    "UPDATE emprestimos SET status = 'quitado' WHERE id = $1 RETURNING *",
+    [emprestimoId]
+  );
+  return updated.rows[0];
 }
 
 async function pagamentoParcial(emprestimoId, valor, observacao) {
@@ -116,27 +137,22 @@ async function pagamentoParcial(emprestimoId, valor, observacao) {
 }
 
 async function renegociar(emprestimoId, { valorPrincipal, valorJurosCiclo, prazoDias, multaPorDia }) {
-  const loanAntigo = await sheets.findById('Emprestimos', emprestimoId);
+  const { rows } = await db.query('SELECT * FROM emprestimos WHERE id = $1', [emprestimoId]);
+  const loanAntigo = rows[0];
   if (!loanAntigo) throw new Error('Emprestimo nao encontrado.');
-  await sheets.updateRow('Emprestimos', emprestimoId, { status: 'renegociado' });
+  await db.query("UPDATE emprestimos SET status = 'renegociado' WHERE id = $1", [emprestimoId]);
 
   const hoje = todayISO();
-  const novoLoan = {
-    id: uuidv4(),
-    usuario_id: loanAntigo.usuario_id,
-    cliente_id: loanAntigo.cliente_id,
-    valor_principal: toNumber(valorPrincipal),
-    valor_juros_ciclo: toNumber(valorJurosCiclo),
-    prazo_dias: toNumber(prazoDias),
-    data_inicio: hoje,
-    data_vencimento_atual: addDaysISO(hoje, prazoDias),
-    multa_por_dia: toNumber(multaPorDia),
-    status: 'ativo',
-    emprestimo_origem_id: emprestimoId,
-    criado_em: new Date().toISOString(),
-  };
-  await sheets.appendRow('Emprestimos', novoLoan);
-  return novoLoan;
+  const novo = await db.query(
+    `INSERT INTO emprestimos
+       (usuario_id, cliente_id, valor_principal, valor_juros_ciclo, prazo_dias,
+        data_inicio, data_vencimento_atual, multa_por_dia, status, emprestimo_origem_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ativo', $9)
+     RETURNING *`,
+    [loanAntigo.usuario_id, loanAntigo.cliente_id, toNumber(valorPrincipal), toNumber(valorJurosCiclo),
+      toNumber(prazoDias), hoje, addDaysISO(hoje, prazoDias), toNumber(multaPorDia), emprestimoId]
+  );
+  return novo.rows[0];
 }
 
 module.exports = {

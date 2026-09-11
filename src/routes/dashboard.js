@@ -1,7 +1,7 @@
 const express = require('express');
 const emprestimosService = require('../services/emprestimos');
 const clientesService = require('../services/clientes');
-const sheets = require('../services/sheets');
+const db = require('../services/db');
 
 const router = express.Router();
 
@@ -20,11 +20,15 @@ router.get('/dashboard', async (req, res, next) => {
     const totalDevidoAtraso = atrasados.reduce((sum, e) => sum + e.valorQuitacao, 0);
 
     const mesAtual = new Date().toISOString().slice(0, 7);
-    const todosPagamentos = await sheets.readSheet('Pagamentos');
-    const idsEmprestimosVisiveis = new Set(emprestimos.map((e) => e.id));
-    const recebidoNoMes = todosPagamentos
-      .filter((p) => p.data.startsWith(mesAtual) && idsEmprestimosVisiveis.has(p.emprestimo_id))
-      .reduce((sum, p) => sum + Number(p.valor || 0), 0);
+    const idsEmprestimosVisiveis = emprestimos.map((e) => e.id);
+    const { rows: pagamentosDoMes } = idsEmprestimosVisiveis.length
+      ? await db.query(
+          `SELECT valor FROM pagamentos
+           WHERE data::text LIKE $1 AND emprestimo_id = ANY($2::uuid[])`,
+          [`${mesAtual}%`, idsEmprestimosVisiveis]
+        )
+      : { rows: [] };
+    const recebidoNoMes = pagamentosDoMes.reduce((sum, p) => sum + Number(p.valor || 0), 0);
 
     res.render('dashboard', {
       totalClientes: clientes.length,

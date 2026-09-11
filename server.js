@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 
-const sheets = require('./src/services/sheets');
+const db = require('./src/services/db');
 const auth = require('./src/services/auth');
 const authRoutes = require('./src/routes/auth');
 const dashboardRoutes = require('./src/routes/dashboard');
@@ -10,12 +10,14 @@ const clientesRoutes = require('./src/routes/clientes');
 const emprestimosRoutes = require('./src/routes/emprestimos');
 const relatoriosRoutes = require('./src/routes/relatorios');
 const usuariosRoutes = require('./src/routes/usuarios');
+const jobsRoutes = require('./src/routes/jobs');
 
 const app = express();
 
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static('public'));
 app.use(cookieParser());
 
@@ -23,6 +25,9 @@ app.use((req, res, next) => {
   res.locals.user = null;
   next();
 });
+
+// Rota chamada por um agendador externo (sem login, protegida por segredo) - ver SETUP.md
+app.use(jobsRoutes);
 
 app.use(authRoutes);
 app.use(auth.requireAuth, dashboardRoutes);
@@ -44,13 +49,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-sheets
-  .ensureSheetsExist()
+db.migrate()
   .then(() => {
     app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
   })
   .catch((err) => {
-    console.error('Erro ao conectar na planilha Google. Verifique o SETUP.md e as variaveis de ambiente.');
+    console.error('Erro ao conectar no banco de dados. Verifique o SETUP.md e a variavel DATABASE_URL.');
     console.error(err);
     process.exit(1);
   });

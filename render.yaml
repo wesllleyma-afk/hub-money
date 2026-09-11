@@ -6,11 +6,15 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: SPREADSHEET_ID
+      - key: DATABASE_URL
         sync: false
-      - key: GOOGLE_SERVICE_ACCOUNT_EMAIL
+      - key: GMAIL_USER
         sync: false
-      - key: GOOGLE_PRIVATE_KEY
+      - key: GMAIL_APP_PASSWORD
         sync: false
+      - key: RELATORIO_DESTINATARIOS
+        sync: false
+      - key: JOBS_SECRET
+        generateValue: true
       - key: JWT_SECRET
         generateValue: true
