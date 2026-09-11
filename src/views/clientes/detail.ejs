@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <h3 class="mb-0"><%= cliente.nome %></h3>
+      <div class="text-muted"><%= cliente.cpf %> · <%= cliente.telefone %></div>
+    </div>
+    <div>
+      <a href="/clientes/<%= cliente.id %>/editar" class="btn btn-outline-secondary btn-sm">Editar</a>
+      <a href="/emprestimos/novo?cliente_id=<%= cliente.id %>" class="btn btn-primary btn-sm">+ Novo empréstimo</a>
+    </div>
+  </div>
+  <% if (cliente.endereco) { %><p><strong>Endereço:</strong> <%= cliente.endereco %></p><% } %>
+  <% if (cliente.observacoes) { %><p><strong>Observações:</strong> <%= cliente.observacoes %></p><% } %>
+
+  <h5 class="mt-4 mb-3">Empréstimos deste cliente</h5>
+  <div class="card p-0">
+    <table class="table mb-0">
+      <thead><tr><th>Início</th><th>Vencimento</th><th>Capital</th><th>Juro/ciclo</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% emprestimos.forEach(e => { %>
+          <tr>
+            <td><%= e.data_inicio %></td>
+            <td><%= e.data_vencimento_atual %></td>
+            <td>R$ <%= e.valor_principal.toFixed(2) %></td>
+            <td>R$ <%= e.valor_juros_ciclo.toFixed(2) %></td>
+            <td><span class="badge badge-status-<%= e.statusExibicao %>"><%= e.statusExibicao %></span></td>
+            <td><a href="/emprestimos/<%= e.id %>" class="btn btn-sm btn-outline-primary">Ver</a></td>
+          </tr>
+        <% }) %>
+        <% if (emprestimos.length === 0) { %>
+          <tr><td colspan="6" class="text-center text-muted py-3">Nenhum empréstimo para este cliente.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

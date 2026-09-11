@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <h3 class="mb-4">Relatórios</h3>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Capital em aberto</div><div class="fs-5 fw-bold">R$ <%= totais.capitalEmAberto.toFixed(2) %></div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Juro previsto (ciclo atual)</div><div class="fs-5 fw-bold">R$ <%= totais.jurosPrevistoCiclo.toFixed(2) %></div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Multas acumuladas</div><div class="fs-5 fw-bold text-danger">R$ <%= totais.multasAcumuladas.toFixed(2) %></div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total a receber se quitar tudo hoje</div><div class="fs-5 fw-bold">R$ <%= totais.totalAReceberSeQuitarTudo.toFixed(2) %></div></div></div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="text-muted small">Ativos</div><div class="fs-4 fw-bold text-success"><%= contagem.ativos %></div></div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="text-muted small">Atrasados</div><div class="fs-4 fw-bold text-danger"><%= contagem.atrasados %></div></div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="text-muted small">Quitados</div><div class="fs-4 fw-bold text-secondary"><%= contagem.quitados %></div></div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="text-muted small">Renegociados</div><div class="fs-4 fw-bold text-warning"><%= contagem.renegociados %></div></div></div>
+  </div>
+
+  <h5 class="mb-3">Todos os empréstimos</h5>
+  <div class="card p-0">
+    <table class="table mb-0">
+      <thead><tr><th>Cliente</th><th>Início</th><th>Vencimento</th><th>Capital</th><th>Juro/ciclo</th><th>Status</th></tr></thead>
+      <tbody>
+        <% emprestimos.forEach(e => { %>
+          <tr>
+            <td><%= clientesPorId[e.cliente_id] ? clientesPorId[e.cliente_id].nome : '—' %></td>
+            <td><%= e.data_inicio %></td>
+            <td><%= e.data_vencimento_atual %></td>
+            <td>R$ <%= e.valor_principal.toFixed(2) %></td>
+            <td>R$ <%= e.valor_juros_ciclo.toFixed(2) %></td>
+            <td><span class="badge badge-status-<%= e.statusExibicao %>"><%= e.statusExibicao %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

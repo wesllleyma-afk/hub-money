@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container" style="max-width:500px;">
+  <h3 class="mb-3">Novo usuário</h3>
+  <% if (erro) { %><div class="alert alert-danger"><%= erro %></div><% } %>
+  <form method="POST" action="/usuarios/novo" class="card p-4">
+    <div class="mb-3">
+      <label class="form-label">Nome *</label>
+      <input type="text" name="nome" class="form-control" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">E-mail *</label>
+      <input type="email" name="email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Senha *</label>
+      <input type="password" name="senha" class="form-control" required minlength="6">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Papel</label>
+      <select name="papel" class="form-select">
+        <option value="funcionario">Funcionário (só vê os próprios lançamentos)</option>
+        <option value="admin">Administrador (vê tudo)</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Criar usuário</button>
+  </form>
+</div>
+</body>
+</html>

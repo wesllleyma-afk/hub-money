@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container" style="max-width:600px;">
+  <h3 class="mb-3">Novo empréstimo</h3>
+  <% if (erro) { %><div class="alert alert-danger"><%= erro %></div><% } %>
+  <form method="POST" action="/emprestimos/novo" class="card p-4">
+    <div class="mb-3">
+      <label class="form-label">Cliente *</label>
+      <select name="cliente_id" class="form-select" required>
+        <option value="">Selecione...</option>
+        <% clientes.forEach(c => { %>
+          <option value="<%= c.id %>" <%= clienteSelecionado === c.id ? 'selected' : '' %>><%= c.nome %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Valor emprestado (capital) *</label>
+      <div class="input-group">
+        <span class="input-group-text">R$</span>
+        <input type="number" step="0.01" min="0" name="valor_principal" class="form-control" required>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Juro combinado por ciclo *</label>
+      <div class="input-group">
+        <span class="input-group-text">R$</span>
+        <input type="number" step="0.01" min="0" name="valor_juros_ciclo" class="form-control" required>
+      </div>
+      <div class="form-text">Valor fixo em reais que o cliente paga para renovar o prazo (não é %).</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Prazo (dias) *</label>
+      <input type="number" min="1" name="prazo_dias" class="form-control" required placeholder="Ex: 30">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Multa por dia de atraso *</label>
+      <div class="input-group">
+        <span class="input-group-text">R$</span>
+        <input type="number" step="0.01" min="0" name="multa_por_dia" class="form-control" required>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Criar empréstimo</button>
+  </form>
+</div>
+</body>
+</html>

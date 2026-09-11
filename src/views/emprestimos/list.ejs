@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Empréstimos</h3>
+    <a href="/emprestimos/novo" class="btn btn-primary">+ Novo empréstimo</a>
+  </div>
+  <div class="btn-group mb-3">
+    <a href="/emprestimos" class="btn btn-sm btn-outline-secondary <%= !statusAtivo ? 'active' : '' %>">Todos</a>
+    <a href="/emprestimos?status=ativo" class="btn btn-sm btn-outline-secondary <%= statusAtivo==='ativo' ? 'active' : '' %>">Ativos</a>
+    <a href="/emprestimos?status=atrasado" class="btn btn-sm btn-outline-secondary <%= statusAtivo==='atrasado' ? 'active' : '' %>">Atrasados</a>
+    <a href="/emprestimos?status=quitado" class="btn btn-sm btn-outline-secondary <%= statusAtivo==='quitado' ? 'active' : '' %>">Quitados</a>
+    <a href="/emprestimos?status=renegociado" class="btn btn-sm btn-outline-secondary <%= statusAtivo==='renegociado' ? 'active' : '' %>">Renegociados</a>
+  </div>
+  <div class="card p-0">
+    <table class="table mb-0">
+      <thead><tr><th>Cliente</th><th>Vencimento</th><th>Capital</th><th>Juro/ciclo</th><th>Multa acum.</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% emprestimos.forEach(e => { %>
+          <tr>
+            <td><%= clientesPorId[e.cliente_id] ? clientesPorId[e.cliente_id].nome : '—' %></td>
+            <td><%= e.data_vencimento_atual %></td>
+            <td>R$ <%= e.valor_principal.toFixed(2) %></td>
+            <td>R$ <%= e.valor_juros_ciclo.toFixed(2) %></td>
+            <td><%= e.multaAcumulada > 0 ? 'R$ ' + e.multaAcumulada.toFixed(2) : '—' %></td>
+            <td><span class="badge badge-status-<%= e.statusExibicao %>"><%= e.statusExibicao %></span></td>
+            <td><a href="/emprestimos/<%= e.id %>" class="btn btn-sm btn-outline-primary">Ver</a></td>
+          </tr>
+        <% }) %>
+        <% if (emprestimos.length === 0) { %>
+          <tr><td colspan="7" class="text-center text-muted py-3">Nenhum empréstimo encontrado.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

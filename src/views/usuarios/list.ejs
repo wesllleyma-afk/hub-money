@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Usuários</h3>
+    <a href="/usuarios/novo" class="btn btn-primary">+ Novo usuário</a>
+  </div>
+  <div class="card p-0">
+    <table class="table mb-0">
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th></tr></thead>
+      <tbody>
+        <% usuarios.forEach(u => { %>
+          <tr>
+            <td><%= u.nome %></td>
+            <td><%= u.email %></td>
+            <td><%= u.papel %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

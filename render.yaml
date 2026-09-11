@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: gestor-emprestimos
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SPREADSHEET_ID
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_EMAIL
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
