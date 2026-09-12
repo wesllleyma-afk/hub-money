@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head><%- include('partials/head') %></head>
-<body>
+<body class="<%= (typeof user !== 'undefined' && user) ? 'has-sidebar' : '' %>">
   <% if (typeof user !== 'undefined' && user) { %><%- include('partials/nav') %><% } %>
   <div class="container">
     <div class="alert alert-danger"><%= mensagem %></div>
