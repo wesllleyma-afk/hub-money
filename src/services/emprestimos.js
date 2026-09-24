@@ -138,6 +138,12 @@ async function pagamentoParcial(emprestimoId, valor, observacao) {
   return registrarPagamento({ emprestimoId, valor, tipo: 'parcial', observacao });
 }
 
+// Marca que a cobranca de hoje foi feita; some da lista so ate o fim do dia,
+// voltando a aparecer amanha se o cliente continuar sem pagar.
+async function marcarCobrancaFeita(emprestimoId) {
+  await db.query('UPDATE emprestimos SET cobranca_confirmada_em = $2 WHERE id = $1', [emprestimoId, todayISO()]);
+}
+
 async function renegociar(emprestimoId, { valorPrincipal, valorJurosCiclo, prazoDias, multaPorDia }) {
   const { rows } = await db.query('SELECT * FROM emprestimos WHERE id = $1', [emprestimoId]);
   const loanAntigo = rows[0];
@@ -167,5 +173,6 @@ module.exports = {
   renovar,
   quitar,
   pagamentoParcial,
+  marcarCobrancaFeita,
   renegociar,
 };

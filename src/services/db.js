@@ -69,6 +69,7 @@ async function migrate() {
       criado_em timestamptz NOT NULL DEFAULT now()
     )
   `);
+  await query('ALTER TABLE emprestimos ADD COLUMN IF NOT EXISTS cobranca_confirmada_em date');
 
   await query(`
     CREATE TABLE IF NOT EXISTS pagamentos (

@@ -90,6 +90,15 @@ router.post('/emprestimos/:id/pagamento-parcial', async (req, res, next) => {
   }
 });
 
+router.post('/emprestimos/:id/marcar-cobrado', async (req, res, next) => {
+  try {
+    await emprestimosService.marcarCobrancaFeita(req.params.id);
+    res.redirect('/dashboard');
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/emprestimos/:id/renegociar', async (req, res, next) => {
   try {
     const { valor_principal, valor_juros_ciclo, prazo_dias, multa_por_dia } = req.body;

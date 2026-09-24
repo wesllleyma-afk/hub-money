@@ -47,9 +47,12 @@
             <% cobrancasAtrasadas.forEach(e => { %>
               <li class="mb-2">
                 <a href="/emprestimos/<%= e.id %>"><%= e.cliente ? e.cliente.nome : '—' %></a>
-                <div class="text-muted small">
+                <div class="text-muted small mb-1">
                   <%= e.diasAtraso %> dia(s) de atraso · R$ <%= e.valorRenovacao.toFixed(2) %> p/ regularizar
                 </div>
+                <form method="POST" action="/emprestimos/<%= e.id %>/marcar-cobrado">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Já cobrei hoje</button>
+                </form>
               </li>
             <% }) %>
           </ul>
@@ -67,7 +70,10 @@
             <% cobrancasHoje.forEach(e => { %>
               <li class="mb-2">
                 <a href="/emprestimos/<%= e.id %>"><%= e.cliente ? e.cliente.nome : '—' %></a>
-                <div class="text-muted small">R$ <%= e.valorRenovacao.toFixed(2) %></div>
+                <div class="text-muted small mb-1">R$ <%= e.valorRenovacao.toFixed(2) %></div>
+                <form method="POST" action="/emprestimos/<%= e.id %>/marcar-cobrado">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Já cobrei hoje</button>
+                </form>
               </li>
             <% }) %>
           </ul>

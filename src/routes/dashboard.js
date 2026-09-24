@@ -19,8 +19,10 @@ router.get('/dashboard', async (req, res, next) => {
 
     const hoje = emprestimosService.todayISO();
     const amanha = emprestimosService.addDaysISO(hoje, 1);
-    const vencemHoje = ativos.filter((e) => e.statusExibicao === 'ativo' && e.data_vencimento_atual === hoje);
+    const naoConfirmadoHoje = (e) => e.cobranca_confirmada_em !== hoje;
+    const vencemHoje = ativos.filter((e) => e.statusExibicao === 'ativo' && e.data_vencimento_atual === hoje && naoConfirmadoHoje(e));
     const vencemAmanha = ativos.filter((e) => e.statusExibicao === 'ativo' && e.data_vencimento_atual === amanha);
+    const atrasadosPendentes = atrasados.filter(naoConfirmadoHoje);
 
     const comCliente = (lista) => lista.map((e) => ({ ...e, cliente: clientesPorId[e.cliente_id] || null }));
 
@@ -47,7 +49,7 @@ router.get('/dashboard', async (req, res, next) => {
       emprestimosRecentes: emprestimos.slice(0, 8),
       cobrancasHoje: comCliente(vencemHoje),
       cobrancasAmanha: comCliente(vencemAmanha),
-      cobrancasAtrasadas: comCliente(atrasados),
+      cobrancasAtrasadas: comCliente(atrasadosPendentes),
     });
   } catch (err) {
     next(err);
