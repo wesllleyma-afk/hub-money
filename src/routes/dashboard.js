@@ -12,9 +12,17 @@ router.get('/dashboard', async (req, res, next) => {
 
     const emprestimos = await emprestimosService.listEmprestimos({ usuarioId, isAdmin });
     const clientes = await clientesService.listClientes({ usuarioId, isAdmin });
+    const clientesPorId = Object.fromEntries(clientes.map((c) => [c.id, c]));
 
     const ativos = emprestimos.filter((e) => e.statusExibicao === 'ativo' || e.statusExibicao === 'atrasado');
     const atrasados = emprestimos.filter((e) => e.statusExibicao === 'atrasado');
+
+    const hoje = emprestimosService.todayISO();
+    const amanha = emprestimosService.addDaysISO(hoje, 1);
+    const vencemHoje = ativos.filter((e) => e.statusExibicao === 'ativo' && e.data_vencimento_atual === hoje);
+    const vencemAmanha = ativos.filter((e) => e.statusExibicao === 'ativo' && e.data_vencimento_atual === amanha);
+
+    const comCliente = (lista) => lista.map((e) => ({ ...e, cliente: clientesPorId[e.cliente_id] || null }));
 
     const totalEmprestado = ativos.reduce((sum, e) => sum + e.valor_principal, 0);
     const totalDevidoAtraso = atrasados.reduce((sum, e) => sum + e.valorQuitacao, 0);
@@ -37,6 +45,9 @@ router.get('/dashboard', async (req, res, next) => {
       qtdAtrasados: atrasados.length,
       recebidoNoMes,
       emprestimosRecentes: emprestimos.slice(0, 8),
+      cobrancasHoje: comCliente(vencemHoje),
+      cobrancasAmanha: comCliente(vencemAmanha),
+      cobrancasAtrasadas: comCliente(atrasados),
     });
   } catch (err) {
     next(err);

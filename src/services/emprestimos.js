@@ -159,6 +159,7 @@ async function renegociar(emprestimoId, { valorPrincipal, valorJurosCiclo, prazo
 
 module.exports = {
   todayISO,
+  addDaysISO,
   computeLoanState,
   listEmprestimos,
   getEmprestimo,

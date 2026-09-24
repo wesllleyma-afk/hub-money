@@ -115,20 +115,11 @@ function gerarHtml(dados) {
   `;
 }
 
-async function destinatariosCadastrados() {
-  const { rows } = await db.query(
-    `SELECT DISTINCT email_relatorio FROM usuarios
-     WHERE email_relatorio IS NOT NULL AND trim(email_relatorio) <> ''`
-  );
-  return rows.map((r) => r.email_relatorio);
-}
-
 async function gerarEEnviar(refDate = new Date()) {
   const periodo = periodoMesAnterior(refDate);
   const dados = await coletarDados(periodo);
   const html = gerarHtml(dados);
-  const doBanco = await destinatariosCadastrados();
-  const destinatarios = doBanco.length ? doBanco : mailer.getDestinatarios();
+  const destinatarios = await mailer.resolverDestinatarios();
   const enviadosPara = await mailer.enviarEmail({ assunto: `Fechamento financeiro - ${periodo.label}`, html, destinatarios });
   return { ...dados, destinatarios: enviadosPara };
 }
