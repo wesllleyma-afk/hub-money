@@ -16,11 +16,34 @@
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Capital</div><div class="fs-5 fw-bold">R$ <%= emprestimo.valor_principal.toFixed(2) %></div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Juro/ciclo</div><div class="fs-5 fw-bold">R$ <%= emprestimo.valor_juros_ciclo.toFixed(2) %></div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Prazo</div><div class="fs-5 fw-bold"><%= emprestimo.prazo_dias %> dias</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Vencimento atual</div><div class="fs-5 fw-bold"><%= emprestimo.data_vencimento_atual %></div></div></div>
+  <div class="card p-4 mb-4">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="text-muted small">Capital</div>
+        <div class="fs-5 fw-bold">R$ <%= emprestimo.valor_principal.toFixed(2) %></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-muted small">Juros por ciclo</div>
+        <div class="fs-5 fw-bold">R$ <%= emprestimo.valor_juros_ciclo.toFixed(2) %></div>
+        <div class="text-muted small"><%= emprestimo.percentualJuros.toFixed(1) %>% sobre o capital</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-muted small">Prazo</div>
+        <div class="fs-5 fw-bold"><%= emprestimo.prazo_dias %> dias</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-muted small">Data de pagamento</div>
+        <div class="fs-5 fw-bold"><%= emprestimo.data_vencimento_atual %></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-muted small">Situação</div>
+        <div class="mt-1"><span class="badge badge-status-<%= emprestimo.statusExibicao %>"><%= emprestimo.statusExibicao %></span></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-muted small">Multa por atraso</div>
+        <div class="fs-5 fw-bold">R$ <%= emprestimo.multa_por_dia.toFixed(2) %>/dia</div>
+      </div>
+    </div>
   </div>
 
   <% if (emprestimo.diasAtraso > 0) { %>

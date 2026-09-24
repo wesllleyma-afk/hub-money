@@ -31,6 +31,7 @@ function computeLoanState(loan, refDateISO = todayISO()) {
   const valorRenovacao = valorJuros + multaAcumulada;
   const valorQuitacao = valorPrincipal + valorJuros + multaAcumulada;
   const statusExibicao = loan.status === 'ativo' && diasAtraso > 0 ? 'atrasado' : loan.status;
+  const percentualJuros = valorPrincipal > 0 ? (valorJuros / valorPrincipal) * 100 : 0;
 
   return {
     ...loan,
@@ -42,6 +43,7 @@ function computeLoanState(loan, refDateISO = todayISO()) {
     valorRenovacao,
     valorQuitacao,
     statusExibicao,
+    percentualJuros,
   };
 }
 
