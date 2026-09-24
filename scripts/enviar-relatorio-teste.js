@@ -5,7 +5,7 @@ relatorioMensal
   .gerarEEnviar()
   .then((dados) => {
     console.log('Relatorio enviado com sucesso!');
-    console.log('Destinatarios:', process.env.RELATORIO_DESTINATARIOS);
+    console.log('Destinatarios:', dados.destinatarios.join(', '));
     console.log('Periodo do relatorio:', dados.periodo.label);
     process.exit(0);
   })

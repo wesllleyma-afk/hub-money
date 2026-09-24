@@ -17,18 +17,19 @@ function getDestinatarios() {
     .filter(Boolean);
 }
 
-async function enviarEmail({ assunto, html }) {
-  const destinatarios = getDestinatarios();
-  if (destinatarios.length === 0) {
-    throw new Error('Nenhum destinatario configurado em RELATORIO_DESTINATARIOS.');
+async function enviarEmail({ assunto, html, destinatarios }) {
+  const lista = destinatarios && destinatarios.length ? destinatarios : getDestinatarios();
+  if (lista.length === 0) {
+    throw new Error('Nenhum destinatario configurado (cadastre um e-mail de relatorio em Usuarios ou defina RELATORIO_DESTINATARIOS).');
   }
   const transporte = getTransport();
   await transporte.sendMail({
     from: `"Hub Money" <${process.env.GMAIL_USER}>`,
-    to: destinatarios.join(','),
+    to: lista.join(','),
     subject: assunto,
     html,
   });
+  return lista;
 }
 
-module.exports = { enviarEmail };
+module.exports = { enviarEmail, getDestinatarios };

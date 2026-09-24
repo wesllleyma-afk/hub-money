@@ -20,12 +20,25 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS usuarios (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       nome text NOT NULL,
-      email text NOT NULL UNIQUE,
+      usuario text NOT NULL UNIQUE,
+      email_relatorio text,
       senha_hash text NOT NULL,
       papel text NOT NULL DEFAULT 'funcionario',
       criado_em timestamptz NOT NULL DEFAULT now()
     )
   `);
+
+  // Bancos criados antes da troca de "email" (login) por "usuario" (apelido livre).
+  await query(`
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'email')
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'usuario') THEN
+        ALTER TABLE usuarios RENAME COLUMN email TO usuario;
+      END IF;
+    END $$;
+  `);
+  await query('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_relatorio text');
 
   await query(`
     CREATE TABLE IF NOT EXISTS clientes (

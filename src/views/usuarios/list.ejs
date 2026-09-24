@@ -10,13 +10,14 @@
   </div>
   <div class="card p-0">
     <table class="table mb-0">
-      <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th></tr></thead>
+      <thead><tr><th>Nome</th><th>Usuário</th><th>Papel</th><th>E-mail do relatório</th></tr></thead>
       <tbody>
         <% usuarios.forEach(u => { %>
           <tr>
             <td><%= u.nome %></td>
-            <td><%= u.email %></td>
+            <td><a href="/usuarios/<%= u.id %>"><%= u.usuario %></a></td>
             <td><%= u.papel %></td>
+            <td><%= u.email_relatorio || '—' %></td>
           </tr>
         <% }) %>
       </tbody>

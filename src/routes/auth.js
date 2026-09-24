@@ -15,11 +15,11 @@ router.get('/setup', async (req, res, next) => {
 router.post('/setup', async (req, res, next) => {
   try {
     if (await auth.hasAnyUser()) return res.redirect('/login');
-    const { nome, email, senha } = req.body;
-    if (!nome || !email || !senha) {
+    const { nome, usuario, senha } = req.body;
+    if (!nome || !usuario || !senha) {
       return res.render('setup', { erro: 'Preencha todos os campos.' });
     }
-    const user = await auth.createUser({ nome, email, senha, papel: 'admin' });
+    const user = await auth.createUser({ nome, usuario, senha, papel: 'admin' });
     auth.setSessionCookie(res, user);
     res.redirect('/dashboard');
   } catch (err) {
@@ -38,9 +38,9 @@ router.get('/login', async (req, res, next) => {
 
 router.post('/login', async (req, res, next) => {
   try {
-    const { email, senha } = req.body;
-    const user = await auth.verifyLogin(email, senha);
-    if (!user) return res.render('login', { erro: 'E-mail ou senha invalidos.' });
+    const { usuario, senha } = req.body;
+    const user = await auth.verifyLogin(usuario, senha);
+    if (!user) return res.render('login', { erro: 'Usuario ou senha invalidos.' });
     auth.setSessionCookie(res, user);
     res.redirect('/dashboard');
   } catch (err) {

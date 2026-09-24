@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('../partials/head') %></head>
+<body class="has-sidebar">
+<%- include('../partials/nav') %>
+<div class="container" style="max-width:500px;">
+  <h3 class="mb-3">Editar usuário</h3>
+  <% if (erro) { %><div class="alert alert-danger"><%= erro %></div><% } %>
+  <form method="POST" action="/usuarios/<%= usuario.id %>" class="card p-4">
+    <div class="mb-3">
+      <label class="form-label">Nome *</label>
+      <input type="text" name="nome" class="form-control" value="<%= usuario.nome %>" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Usuário *</label>
+      <input type="text" name="usuario" class="form-control" value="<%= usuario.usuario %>" required>
+      <div class="form-text">Usado para fazer login. Pode ser qualquer apelido, desde que não exista outro igual.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Nova senha</label>
+      <input type="password" name="senha" class="form-control" minlength="6" placeholder="Deixe em branco para manter a senha atual">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Papel</label>
+      <select name="papel" class="form-select">
+        <option value="funcionario" <%= usuario.papel === 'funcionario' ? 'selected' : '' %>>Funcionário (só vê os próprios lançamentos)</option>
+        <option value="admin" <%= usuario.papel === 'admin' ? 'selected' : '' %>>Administrador (vê tudo)</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">E-mail para relatório mensal</label>
+      <input type="email" name="emailRelatorio" class="form-control" value="<%= usuario.email_relatorio || '' %>">
+      <div class="form-text">Opcional. Esse usuário receberá o fechamento mensal nesse e-mail.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <a href="/usuarios" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+</body>
+</html>
