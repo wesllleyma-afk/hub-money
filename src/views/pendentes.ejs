@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head><%- include('partials/head') %></head>
+<body class="has-sidebar">
+<%- include('partials/nav') %>
+<div class="container">
+  <h3 class="mb-4">Pendentes</h3>
+
+  <div class="card p-0">
+    <table class="table mb-0 align-middle">
+      <thead><tr><th>Cliente</th><th>Telefone</th><th>Dias de atraso</th><th>Valor a regularizar</th><th>Venceu em</th><th></th></tr></thead>
+      <tbody>
+        <% pendentes.forEach(e => { %>
+          <tr>
+            <td><a href="/emprestimos/<%= e.id %>"><%= e.cliente ? e.cliente.nome : '—' %></a></td>
+            <td><%= e.cliente && e.cliente.telefone ? e.cliente.telefone : '—' %></td>
+            <td><span class="badge badge-status-atrasado"><%= e.diasAtraso %> dia(s)</span></td>
+            <td>R$ <%= e.valorRenovacao.toFixed(2) %></td>
+            <td><%= e.data_vencimento_atual %></td>
+            <td>
+              <% if (e.jaConfirmadoHoje) { %>
+                <span class="badge bg-secondary">Cobrado hoje</span>
+              <% } else { %>
+                <form method="POST" action="/emprestimos/<%= e.id %>/marcar-cobrado">
+                  <input type="hidden" name="voltar" value="/pendentes">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Já cobrei hoje</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (pendentes.length === 0) { %>
+          <tr><td colspan="6" class="text-center text-muted py-3">Nenhum cliente atrasado no momento.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

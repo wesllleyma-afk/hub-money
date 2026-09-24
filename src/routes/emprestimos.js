@@ -19,6 +19,29 @@ router.get('/emprestimos', async (req, res, next) => {
   }
 });
 
+router.get('/pendentes', async (req, res, next) => {
+  try {
+    const { id: usuarioId, papel } = req.user;
+    const isAdmin = papel === 'admin';
+    const emprestimos = await emprestimosService.listEmprestimos({ usuarioId, isAdmin, status: 'atrasado' });
+    const clientes = await clientesService.listClientes({ usuarioId, isAdmin });
+    const clientesPorId = Object.fromEntries(clientes.map((c) => [c.id, c]));
+
+    const hoje = emprestimosService.todayISO();
+    const pendentes = emprestimos
+      .map((e) => ({
+        ...e,
+        cliente: clientesPorId[e.cliente_id] || null,
+        jaConfirmadoHoje: e.cobranca_confirmada_em === hoje,
+      }))
+      .sort((a, b) => b.diasAtraso - a.diasAtraso);
+
+    res.render('pendentes', { pendentes });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/emprestimos/novo', async (req, res, next) => {
   try {
     const clientes = await clientesService.listClientes({ usuarioId: req.user.id, isAdmin: req.user.papel === 'admin' });
@@ -93,7 +116,7 @@ router.post('/emprestimos/:id/pagamento-parcial', async (req, res, next) => {
 router.post('/emprestimos/:id/marcar-cobrado', async (req, res, next) => {
   try {
     await emprestimosService.marcarCobrancaFeita(req.params.id);
-    res.redirect('/dashboard');
+    res.redirect(req.body.voltar || '/dashboard');
   } catch (err) {
     next(err);
   }
