@@ -54,55 +54,47 @@
     </div>
   <% } %>
 
+  <% if (emprestimo.pagoNoCiclo > 0) { %>
+    <div class="alert alert-warning">
+      Pagamento parcial recebido neste ciclo: <strong>R$ <%= emprestimo.pagoNoCiclo.toFixed(2) %></strong> ·
+      Falta cobrar <strong>R$ <%= emprestimo.saldoRenovacao.toFixed(2) %></strong> para completar o juro do ciclo.
+    </div>
+  <% } %>
+
   <% if (emprestimo.status === 'ativo') { %>
   <div class="row g-3 mb-4">
     <div class="col-md-6">
-      <div class="card p-3 h-100">
-        <h6>Renovar (pagar só o juro)</h6>
-        <p class="small text-muted">Renova o prazo por mais <%= emprestimo.prazo_dias %> dias. Vencimento passa a ser <%= emprestimo.data_vencimento_atual %> + <%= emprestimo.prazo_dias %> dias.</p>
+      <div class="card p-3 h-100 d-flex justify-content-center">
         <form method="POST" action="/emprestimos/<%= emprestimo.id %>/renovar">
-          <label class="form-label small">Valor a pagar (juro <%= emprestimo.multaAcumulada > 0 ? '+ multa' : '' %>)</label>
-          <div class="input-group mb-2">
-            <span class="input-group-text">R$</span>
-            <input type="number" step="0.01" name="valor_pago" class="form-control" value="<%= emprestimo.valorRenovacao.toFixed(2) %>" required>
-          </div>
+          <input type="hidden" name="valor_pago" value="<%= emprestimo.saldoRenovacao.toFixed(2) %>">
           <button type="submit" class="btn btn-success w-100">Confirmar renovação</button>
         </form>
       </div>
     </div>
     <div class="col-md-6">
-      <div class="card p-3 h-100">
-        <h6>Quitar (capital + juro)</h6>
-        <p class="small text-muted">Encerra o empréstimo definitivamente.</p>
+      <div class="card p-3 h-100 d-flex justify-content-center">
         <form method="POST" action="/emprestimos/<%= emprestimo.id %>/quitar">
-          <label class="form-label small">Valor total de quitação</label>
-          <div class="input-group mb-2">
-            <span class="input-group-text">R$</span>
-            <input type="number" step="0.01" name="valor_pago" class="form-control" value="<%= emprestimo.valorQuitacao.toFixed(2) %>" required>
-          </div>
+          <input type="hidden" name="valor_pago" value="<%= emprestimo.saldoQuitacao.toFixed(2) %>">
           <button type="submit" class="btn btn-primary w-100">Confirmar quitação</button>
         </form>
       </div>
     </div>
     <div class="col-md-6">
       <div class="card p-3 h-100">
-        <h6>Registrar pagamento parcial</h6>
-        <p class="small text-muted">Não altera vencimento nem status — fica registrado para conferência manual.</p>
         <form method="POST" action="/emprestimos/<%= emprestimo.id %>/pagamento-parcial">
           <div class="input-group mb-2">
             <span class="input-group-text">R$</span>
             <input type="number" step="0.01" name="valor" class="form-control" placeholder="Valor pago" required>
           </div>
           <input type="text" name="observacao" class="form-control mb-2" placeholder="Observação (opcional)">
-          <button type="submit" class="btn btn-outline-secondary w-100">Registrar</button>
+          <button type="submit" class="btn btn-outline-secondary w-100">Registrar pagamento parcial</button>
         </form>
       </div>
     </div>
     <div class="col-md-6">
       <div class="card p-3 h-100">
-        <h6>Renegociar dívida</h6>
-        <p class="small text-muted">Encerra este empréstimo como "renegociado" e cria um novo com as condições abaixo.</p>
-        <form method="POST" action="/emprestimos/<%= emprestimo.id %>/renegociar">
+        <button type="button" class="btn btn-warning w-100" id="btn-abrir-renegociar">Renegociar dívida</button>
+        <form method="POST" action="/emprestimos/<%= emprestimo.id %>/renegociar" class="d-none mt-3" id="form-renegociar">
           <div class="input-group mb-2">
             <span class="input-group-text">Capital R$</span>
             <input type="number" step="0.01" name="valor_principal" class="form-control" value="<%= emprestimo.valorQuitacao.toFixed(2) %>" required>
@@ -119,11 +111,17 @@
             <span class="input-group-text">Multa/dia R$</span>
             <input type="number" step="0.01" name="multa_por_dia" class="form-control" value="<%= emprestimo.multa_por_dia.toFixed(2) %>" required>
           </div>
-          <button type="submit" class="btn btn-warning w-100">Renegociar</button>
+          <button type="submit" class="btn btn-warning w-100">Confirmar renegociação</button>
         </form>
       </div>
     </div>
   </div>
+  <script>
+    document.getElementById('btn-abrir-renegociar').addEventListener('click', function () {
+      this.classList.add('d-none');
+      document.getElementById('form-renegociar').classList.remove('d-none');
+    });
+  </script>
   <% } %>
 
   <h5 class="mb-3">Histórico de pagamentos</h5>

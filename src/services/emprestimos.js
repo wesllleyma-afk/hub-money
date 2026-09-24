@@ -74,7 +74,20 @@ async function getEmprestimo(id) {
     'SELECT * FROM pagamentos WHERE emprestimo_id = $1 ORDER BY criado_em DESC',
     [id]
   );
-  return { ...computeLoanState(loan), pagamentos: pagamentosRes.rows };
+  const pagamentos = pagamentosRes.rows;
+
+  // Soma os pagamentos parciais feitos desde a ultima renovacao/quitacao (o ciclo atual).
+  let pagoNoCiclo = 0;
+  for (const p of pagamentos) {
+    if (p.tipo === 'renovacao' || p.tipo === 'quitacao') break;
+    if (p.tipo === 'parcial') pagoNoCiclo += toNumber(p.valor);
+  }
+
+  const estado = computeLoanState(loan);
+  const saldoRenovacao = Math.max(0, estado.valorRenovacao - pagoNoCiclo);
+  const saldoQuitacao = Math.max(0, estado.valorQuitacao - pagoNoCiclo);
+
+  return { ...estado, pagamentos, pagoNoCiclo, saldoRenovacao, saldoQuitacao };
 }
 
 async function criarEmprestimo({ usuarioId, clienteId, valorPrincipal, valorJurosCiclo, prazoDias, multaPorDia }) {
